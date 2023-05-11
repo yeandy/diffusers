@@ -210,7 +210,7 @@ class FlaxAttention(nn.Module):
             query_states = query_states.astype(jnp.int8)
             key_states = key_states.astype(jnp.int8)
             #print("query, key dtypes:", query_states.dtype, key_states.dtype)
-            attention_scores = jnp.einsum("b i d, b j d->b i j", query_states, key_states, preferred_element_type=jnp.bfloat16)
+            attention_scores = jnp.einsum("b i d, b j d->b i j", query_states, key_states, preferred_element_type=jnp.int32)
             #print("attention scores 1", attention_scores.dtype, self.scale)
             attention_scores = attention_scores * self.scale
             #print("attention scores 2", attention_scores.dtype)
@@ -218,11 +218,12 @@ class FlaxAttention(nn.Module):
 
             # attend to values
             #print("attention dtype before:", attention_probs.dtype)
-            attention_probs = (attention_probs*256).astype(jnp.int8)
+            #attention_probs = (attention_probs*256).astype(jnp.int8)
+            attention_probs = attention_probs.astype(jnp.int8)
             value_states = value_states.astype(jnp.int8)
             #print("attention, value dtypes:", attention_probs.dtype, value_states.dtype)
-            hidden_states = jnp.einsum("b i j, b j d -> b i d", attention_probs, value_states, preferred_element_type=jnp.bfloat16)
-            hidden_states = jnp.true_divide(hidden_states, 256.0)
+            hidden_states = jnp.einsum("b i j, b j d -> b i d", attention_probs, value_states, preferred_element_type=jnp.int32)
+            #hidden_states = jnp.true_divide(hidden_states, 256.0)
             #print("hidden states dtype", hidden_states.dtype)
 
         hidden_states = self.reshape_batch_dim_to_heads(hidden_states)
